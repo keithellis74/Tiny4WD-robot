@@ -34,10 +34,11 @@ from time import sleep
 import os
 
 # Set debug to true if you want extra debug info
-debug = True
+debug = False
 running = True
 detect_joystick = True
 run_motors = True
+tank_mode = False
 
 #functions
 def _print(item):
@@ -46,6 +47,26 @@ def _print(item):
 
 def robot_cleanup():
 	robot.stop()
+
+def mixer(yaw, throttle, max_power=1):
+    """
+    Mix a pair of joystick axes, returning a pair of wheel speeds. This is where the mapping from
+    joystick positions to wheel powers is defined, so any changes to how the robot drives should
+    be made here, everything else is really just plumbing.
+
+    :param yaw:
+        Yaw axis value, ranges from -1.0 to 1.0
+    :param throttle:
+        Throttle axis value, ranges from -1.0 to 1.0
+    :param max_power:
+        Maximum speed that should be returned from the mixer, defaults to 100
+    :return:
+        A pair of power_left, power_right integer values to send to the motor driver
+    """
+    left = throttle + yaw
+    right = throttle - yaw
+    scale = float(max_power) / max(1, abs(left), abs(right))
+    return float(left * scale), float(right * scale)
 
 # Main code
 # Create robot object
@@ -64,25 +85,44 @@ while detect_joystick:
 			detect_joystick = False
 			_print("Found joystick{}".format(joystick))
 			while running:
-				# Check and react to joystick input
-				ly = joystick.axes.get_value('ly')
-				ry = joystick.axes.get_value('ry')
-				_print("Left y = {0}".format(ly))
-				_print("Right y = {0}".format(ry))		
-				sleep(0.1)
-				if run_motors:
-					robot.set_motors(ly, ry)
+				if tank_mode:
+					# Check and react to joystick input
+					ly = joystick['ly']
+					ry = joystick['ry']
+					_print("Left y = {0}".format(ly))
+					_print("Right y = {0}".format(ry))
+					sleep(0.1)
+					if run_motors:
+						robot.set_motors(ly, ry)
+					else:
+						_print("Motors not enabled")
+						_print ("left = {}, right = {}".format(l, r))
+
+				#Running with left stick only
 				else:
-					print("Motors not enabled")
+					yaw = joystick['lx']
+					throttle = joystick['ly']
+					_print("Yaw = {0}".format(yaw))
+					_print("Thottle = {0}".format(throttle))
+					sleep(0.1)
+					l, r = mixer(yaw, throttle)
+					if run_motors:
+						_print ("left = {}, right = {}".format(l, r))
+						robot.set_motors(l, r)
+					else:
+						_print ("left = {}, right = {}".format(l, r))
 
 				# Check and react to button presses
-				presses = joystick.buttons.get_and_clear_button_press_history()
-				held = joystick.buttons.is_held_name('select')
+				presses = joystick.check_presses()
+				held = joystick['select']
 				if held is not None and held > 5:
 					_print("Start held for more than 5 seconds")
 					running = False
 					robot_cleanup()
 					os.system("/sbin/halt")
+				if presses['r1']:
+					tank_mode = not tank_mode
+					print("Tankmode = {}".format(tank_mode))
 
 	except IOError:
 		_print("No joystick found")

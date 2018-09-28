@@ -22,7 +22,7 @@
 # This code is based on the samplw code provided by 4Tronix but it has been
 # built into a number of classes.
 
-# Currently there is a base class 'Motor_Controller', this handles all the 
+# Currently there is a base class 'Motor_Controller', this handles all the
 # I2C communication
 
 # Two other classes are 'Motor' and 'Robot', both inherrit from 'Motor_Controller'
@@ -31,13 +31,13 @@
 # Other functions of the board, such as inputs and outputs are still to be
 # completed
 
-import smbus
+from smbus import SMBus
 import time
 
 
 class Motor_Controller(object):
 	def __init__(self, addr = None, debug = None):
-		''' base class which handles the communications with the 
+		''' base class which handles the communications with the
 		4Tronix Picon Zero motor controller
 		The motor controller is hard coded to I2C address 0x22, but
 		add allows this to be changed if needed.
@@ -50,13 +50,13 @@ class Motor_Controller(object):
 		else:
 			self.addr = addr
 		self.retries = 4
-		self.bus = smbus.SMBus(1)
+		self.bus = SMBus(1)
 		self.motorA = 0
 		self.motorB = 1
 		if debug == None:
 			self.debug = False
 		else:
-			self.debug = debug	
+			self.debug = debug
 		self.reset = 20
 		self.reset_board()
 

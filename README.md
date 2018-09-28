@@ -42,3 +42,11 @@ I chose to power the PiCon Zero board from the Pi, which is fed from the Power B
 fed from the terminal blocks which I wired up directly to the 3.7v of the lipo battery. 
 
 For a demo of the Tiny4WD robot see my Introduction [YouTube video](https://youtu.be/eh4GcPFB2xY)
+
+## Dependencies
+
+  pip install approxeng.input
+  pip install RPi.gpio
+  pip install gpiozero
+  pip install smbus-cffi
+
